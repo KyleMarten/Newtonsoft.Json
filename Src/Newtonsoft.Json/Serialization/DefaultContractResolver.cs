@@ -705,10 +705,7 @@ namespace Newtonsoft.Json.Serialization
                 {
                     JsonProperty property = CreatePropertyFromConstructorParameter(matchingMemberProperty, parameterInfo);
 
-                    if (property != null)
-                    {
-                        parameterCollection.AddProperty(property);
-                    }
+                    parameterCollection.AddProperty(property);
                 }
             }
 
@@ -1374,16 +1371,13 @@ namespace Newtonsoft.Json.Serialization
             {
                 JsonProperty property = CreateProperty(member, memberSerialization);
 
-                if (property != null)
+                // nametable is not thread-safe for multiple writers
+                lock (nameTable)
                 {
-                    // nametable is not thread-safe for multiple writers
-                    lock (nameTable)
-                    {
-                        property.PropertyName = nameTable.Add(property.PropertyName!);
-                    }
-
-                    properties.AddProperty(property);
+                    property.PropertyName = nameTable.Add(property.PropertyName!);
                 }
+
+                properties.AddProperty(property);
             }
 
             IList<JsonProperty> orderedProperties = properties.OrderBy(p => p.Order ?? -1).ToList();
@@ -1529,7 +1523,7 @@ namespace Newtonsoft.Json.Serialization
             {
                 property.PropertyName = ResolvePropertyName(mappedName);
             }
-            
+
             property.UnderlyingName = name;
 
             bool hasMemberAttribute = false;
